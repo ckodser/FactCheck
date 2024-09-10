@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 80vh;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        .scrollable-section {
+            overflow-y: auto;
+            max-height: 300px; /* Set the maximum height of the section */
+            width: 70%; /* Make the section take up the full width of its container */
+            border: 1px solid black; /* Add a thin black border around the section */
+            background-color: #f9f9f9; /* Set the background color of the section */
+            margin: 50px 50px 10px 50px; /* Add 50px padding to the top and sides, and 10px padding to the bottom */
+            padding: 15px 10px 10px 10px;
+            box-sizing: border-box; /* Include padding and border in the section's total width and height */
+        }
+
+
+        .text-box {
+    border: 1px solid black; /* Add a thin black border around the box */
+    background-color: #f9f9e9; /* Set the background color of the box */
+    padding: 15px 10px; /* Add some padding around the inside of the box */
+    margin: 50px 50px 10px 50px; /* Add some margin around the outside of the box */
+    width: 70%; /* Make the box take up 70% of the width of its container */
+    min-height: 100px; /* Set a minimum height for the box */
+    box-sizing: border-box; /* Include padding and border in the box's total width and height */
+}
+
+.text-box p {
+    margin: 0;
+    line-height: 1.5;
+    text-align: right;
+}
+
+        .item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+        }
+        .stock-name::after {
+    content: " ";
+}
+        .bi-graph-up-arrow {
+    font-size: 1.5em;
+    color: green;
+}
+
+.bi-graph-down-arrow {
+    font-size: 1.5em;
+    color: red;
+}
+
+    </style>
+</head>
+<body>
+<div class="text-box">
+    <p>{{ text }}</p>
+</div>
+<div class="scrollable-section">
+    {% for stock in stocks %}
+        <div class="item">
+        <span class="stock-name">{{ stock.name }}</span>
+        <a href="https://www.shakhesban.com/markets/stock/{{ stock.name }}">  دیدن نمودار و اخبار  {{ stock.name }}</a>
+            {% if stock.growth %}
+                <i class="bi bi-graph-up-arrow"></i>
+            {% else %}
+                <i class="bi bi-graph-down-arrow"></i>
+            {% endif %}
+
+        </div>
+    {% endfor %}
+</div>
+
+</body>
+</html>

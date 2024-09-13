@@ -99,10 +99,25 @@ def get_news_in_page(soup):
 
 def parse_news(soup):
     text = ""
+    blockquotes = soup.find_all('blockquote')
+    for blockquote in blockquotes:
+        text += blockquote.get_text() + "\n"
+        break
+    print("blockquites:")
+    print(text)
+    print("X"*40)
     post_text_divs = soup.find_all('div', class_='post-text')
+    last_image=None
     for post_text_div in post_text_divs:
         for p in post_text_div.find_all("p"):
             text += p.get_text() + "\n"
+        for a in post_text_div.find_all("a", class_='lightbox'):
+            for img in a.find_all("img", class_='img-fluid'):
+                last_image=img
+    if last_image is not None:
+        last_image=img['src']
+        if last_image.startswith("/"):
+            last_image="https://www.bourse24.ir"+last_image
 
     dateti = soup.find_all("i", class_="fa-calendar")[0].parent
     date = dateti.get_text().split()
@@ -115,7 +130,8 @@ def parse_news(soup):
     gregorian_date = persian_date.togregorian()
     new_row = {"date": gregorian_date,
                "persian_date": str(persian_date),
-               "text": text}
+               "text": text,
+               "img":last_image}
     return new_row
 
 
@@ -152,46 +168,48 @@ def is_exist_tag(key):
     return response.url != "https://www.bourse24.ir/news"
 
 
+if __name__ == '__main__':
+    with open('data\stock_names.json', 'r', encoding='utf-8') as json_file:
+        stock_names = json.load(json_file)
 
-with open('data\stock_names.json', 'r', encoding='utf-8') as json_file:
-    stock_names = json.load(json_file)
+    for group in reversed(list(stock_names.keys())):
+        for key in reversed(stock_names[group]):
+            key=convert_arabic_to_persian(key)
+            if isfile(f"ndata/all_news_{key}.json"):
+                all_news = pd.read_json(f"ndata/all_news_{key}.json")
+                continue
+            if is_exist_tag(key):
+                all_news = pd.DataFrame(columns=['text', 'persian_date', 'date', 'key', 'url', 'img', 'img_text'])
+                print("crawl ", key)
 
-for group in reversed(list(stock_names.keys())):
-    for key in reversed(stock_names[group]):
-        key=convert_arabic_to_persian(key)
-        if isfile(f"data/all_news_{key}.json"):
-            all_news = pd.read_json(f"data/all_news_{key}.json")
-            continue
-        if is_exist_tag(key):
-            all_news = pd.DataFrame(columns=['text', 'persian_date', 'date', 'key', 'url'])
-            print("crawl ", key)
+                all_links = get_links(key, max_page=10)
 
-            all_links = get_links(key, max_page=10)
+                for link_id, link in enumerate(all_links):
+                    if link not in all_news['url'].values:
+                        response = requests.get(link)
 
-            for link_id, link in enumerate(all_links):
-                if link not in all_news['url'].values:
-                    response = requests.get(link)
+                        # Check if the request was successful
+                        if response.status_code == 200:
+                            soup = BeautifulSoup(response.content, 'html.parser')
+                            news = parse_news(soup)
+                            news['key'] = key
+                            news['url'] = link
+                            news['img_text'] = ""
+                            all_news = all_news.append(news, ignore_index=True)
+                            all_news.to_json(f"ndata/all_news_{key}.json", orient="records", force_ascii=False)
+                            print(news['text'])
+                            print(news['img'])
+                            print("*" * 50)
+                            # print(news)
+                        time.sleep(0.1)
+            else:
+                print("DELETE", key)
+                if isfile(f"ndata/all_news_{key}.json"):
+                    os.remove(f"ndata/all_news_{key}.json")
+                    print("really DELETE", key)
+                    time.sleep(0.1)
+                # if link_id==4:
+                #     break
+            # print(all_links)
 
-                    # Check if the request was successful
-                    if response.status_code == 200:
-                        soup = BeautifulSoup(response.content, 'html.parser')
-                        news = parse_news(soup)
-                        news['key'] = key
-                        news['url'] = link
-                        all_news = all_news.append(news, ignore_index=True)
-                        all_news.to_json(f"data/all_news_{key}.json", orient="records", force_ascii=False)
-                        print(news['text'])
-                        print("*" * 50)
-                        # print(news)
-                    time.sleep(1)
-        else:
-            print("DELETE", key)
-            if isfile(f"data/all_news_{key}.json"):
-                os.remove(f"data/all_news_{key}.json")
-                print("really DELETE", key)
-                time.sleep(1)
-            # if link_id==4:
-            #     break
-        # print(all_links)
-
-        #
+            #

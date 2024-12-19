@@ -1,15 +1,17 @@
+from TFIDF import search_tfidf  # Import the function from your TF-IDF file
+from reasoner import reasoner
 from django.shortcuts import render
 
-# Create your views here.
-from django.shortcuts import render
 
-def main_view(request):
-    context = {}
-    return render(request, 'news.html', context)
+def main_page(request):
+    if request.method == "POST":
+        text = request.POST.get('news_text')  # Get the text from the form
+        top_matches = search_tfidf(text)  # Use the search_tfidf function to get results
 
-
-def results(request):
-    text = request.POST.get('news_text')  # getting the text from the form
-
-    context={'text':text, 'stocks':[{'name':'وآیند', 'growth':True}, {'name':'افق', 'growth':True},{'name':'کاما', 'growth':False}]}
-    return render(request, 'results.html', context)
+        context = {
+            'text': text,
+            'reasoner_outcome': reasoner(text, top_matches),
+            'top_matches': top_matches  # Pass the results to the template
+        }
+        return render(request, 'news_results.html', context)
+    return render(request, 'news_results.html')  # Return the empty page if GET request

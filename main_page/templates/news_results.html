@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Django Website</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.2/font/bootstrap-icons.css" rel="stylesheet">
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .container {
+        width: 70%;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .text-box {
+        border: 1px solid black;
+        background-color: #f9f9e9;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+
+    .text-box p {
+        margin: 0;
+        line-height: 1.5;
+        text-align: right;
+    }
+
+    .results-section {
+        background-color: #f9f9f9;
+        border: 1px solid black;
+        padding: 20px;
+    }
+
+    .result-item {
+        margin-bottom: 15px;
+        padding: 10px;
+        border: 1px solid #ccc;
+        background-color: #fff;
+    }
+
+    .result-item h5 {
+        margin: 0;
+    }
+
+    .result-item p {
+        margin-top: 10px;
+        line-height: 1.5;
+    }
+
+    .result-item .index-score {
+        text-align: left; /* Align text to the left */
+    }
+</style></head>
+<body class="bg-secondary bg-gradient">
+
+    <!-- Form Section (from the first HTML file) -->
+    <div class="container mt-5">
+        <h1 class="text-center text-white">News Input Getter</h1>
+        <p class="text-left text-light mt-5">Please enter your news in the box below. It should be in text format and up to 5000 characters.</p>
+        <form action='' method="post">
+    {% csrf_token %}
+    <textarea class="form-control w-100" name="news_text" rows="10" maxlength="5000" dir="rtl">{% if text %}{{ text }}{% endif %}</textarea>
+    <br>
+    <button type="submit" class="btn btn-primary float-right">Enter</button>
+</form>
+
+
+    </div>
+
+    <!-- Results Section (from the second HTML file) -->
+    
+<div class="container">
+    {% if text %}
+    {% if reasoner_outcome == "FACT" %}
+        <div class="text-box" style="background-color: #d4edda; border-color: #c3e6cb;"> <!-- Green -->
+            <p>{{ text }}</p>
+            <p class="text-success fw-bold">Outcome: {{ reasoner_outcome }}</p>
+        </div>
+    {% elif reasoner_outcome == "FALSE" %}
+        <div class="text-box" style="background-color: #f8d7da; border-color: #f5c6cb;"> <!-- Red -->
+            <p>{{ text }}</p>
+            <p class="text-danger fw-bold">Outcome: {{ reasoner_outcome }}</p>
+        </div>
+    {% elif reasoner_outcome == "UNRELATED" or reasoner_outcome == "UNKNOWN" %}
+        <div class="text-box" style="background-color: #fff3cd; border-color: #ffeeba;"> <!-- Yellow -->
+            <p>{{ text }}</p>
+            <p class="text-warning fw-bold">Outcome: {{ reasoner_outcome }}</p>
+        </div>
+    {% else %}
+        <div class="text-box" style="background-color: #e2e3e5; border-color: #d6d8db;"> <!-- Grey (Fallback) -->
+            <p>{{ text }}</p>
+            <p class="text-muted fw-bold">Outcome: Not Available</p>
+        </div>
+    {% endif %}
+
+
+        <div class="results-section">
+            <h3>Top Matches</h3>
+            {% if top_matches %}
+                {% for index, score, matched_text, key, persian_date, url in top_matches %}
+                    <div class="result-item">
+                        <!-- Document Index and Score -->
+                        <div>
+    <!-- Title (Document Index) -->
+    <h5 style="text-align: left;">
+        Stock: {{ key }}
+    </h5>
+    
+    <!-- Score and Date -->
+    <p>
+        <span style="float: left;">
+            <strong>Score:</strong> {{ score|floatformat:4 }}
+        </span>
+        <span style="float: right; direction: rtl; text-align: right;">
+            {{ persian_date }}
+        </span>
+    </p>
+    <div style="clear: both;"></div>
+</div>
+
+                        <!-- Main Text -->
+                        <p dir="rtl" style="text-align: right;">
+                            {{ matched_text }}
+                        </p>
+
+                        <!-- Related URL -->
+                        <p>
+                            <a href="{{ url }}" target="_blank">{{ url }}</a>
+                        </p>
+                        <hr>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No matches found.</p>
+            {% endif %}
+        </div>
+    {% endif %}
+</div>
+
+</body>
+</html>
